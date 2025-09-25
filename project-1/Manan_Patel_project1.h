@@ -100,8 +100,8 @@ void binary_radix_sort_helper(vector<T> &list, bool descending);
 template<typename T>
 void radix_sort_helper(vector<T> &list, unsigned int base, bool descending)
 /* Base B Radix Sort */
-// template<Integral T> 
-// void radix_sort(vector<T> &list, unsigned int base = 10, bool descending = false);
+template<Integral T> 
+void radix_sort(vector<T> &list, unsigned int base = 10, bool descending = false);
 
 
 
