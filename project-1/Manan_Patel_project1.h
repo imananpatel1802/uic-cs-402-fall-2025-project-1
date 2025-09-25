@@ -43,8 +43,8 @@ void hybrid_quick_sort(std::vector<T> &list, int low, int high, bool descending)
 /*** Main Functions for Students to Implement ***/
 
 /** Helper type for integrals only **/
-// template<class T>
-// concept Integral = is_integral<T>::value;
+template<class T>
+concept Integral = is_integral<T>::value;
 
 
 /* Bubble Sort */
