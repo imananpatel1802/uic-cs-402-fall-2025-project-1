@@ -4,8 +4,8 @@
 #include <type_traits>
 #include <ostream>
 
-#ifndef FIRSTNAME_LASTNAME_PROJECT1
-#define FIRSTNAME_LASTNAME_PROJECT1
+#ifndef Manan_Patel_PROJECT1
+#define Manan_Patel_PROJECT1
 
 using namespace std;
 
@@ -23,11 +23,16 @@ template <typename T>
 void insertion_sort_helper(std::vector<T> &list, int start, int end, bool descending);
 
 template <typename T>
-void insertion_sort_helper_2(std::vector<T> &list, int start, int end, bool descending);
+void hybrid_insertion_sort_helper(std::vector<T> &list, int start, int end, bool descending);
 
 template <typename T>
 void merge_helper(std::vector<T>& list, int left, int mid, int right, bool descending);
 
+template <typename T>
+int hybrid_partition_helper(std::vector<T> &list, int low, int high, bool descending);
+
+template <typename T>
+void hybrid_quick_sort(std::vector<T> &list, int low, int high, bool descending);
 /*** END STUDENT HELPER FUNCTIONS ***/
 
 

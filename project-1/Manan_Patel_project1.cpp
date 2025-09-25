@@ -1,5 +1,5 @@
 
-#include "Firstname_Lastname_project1.h"
+#include "Manan_Patel_project1.h"
 #include "testing.h"
 
 #include <iostream>
@@ -180,32 +180,50 @@ void insertion_sort(vector<T> &list, bool descending)
  *                   in ascending order (the default)
  *
  * */
-template<typename T>
-void quicksort(vector<T> &list, bool descending) {
-    // Your code here!
+template <typename T>
+void quicksort(std::vector<T> &list, bool descending) {
+  if (list.size() <= 1) return;
+  if (is_sorted(list.begin(), list.end())) return;
+  quicksort_helper(list, 0, list.size() - 1, descending);
 }
-
-
 /* Quick Partition
  *
  * Helper function for Quicksort. You will implement this to help with your
  * quicksort algorithm above.
  *
  */
-template<typename T>
-vector<T>& quick_partition(vector<T> &list, bool descending) {
-    // Your code here!
-    //
-    // You can use the helper function 
-    //      unsigned int get_rand_index(unsigned int len)
+template <typename T>
+std::vector<T> &quick_partition(std::vector<T> &list, bool descending) {
+  partition_helper(list, 0, list.size() - 1, descending);
+  return list;
 }
 
+template <typename T>
+void quicksort_helper(std::vector<T> &list, int low, int high,
+                      bool descending) {
+  if (low < high) {
+    int j = partition_helper(list, low, high, descending);
+    quicksort_helper(list, low, j, descending);
+    quicksort_helper(list, j + 1, high, descending);
+  }
+}
 
-
-
-
-
-
+template <typename T>
+int partition_helper(std::vector<T> &list, int low, int high, bool descending) {
+  std::swap(list[low], list[random_num(low, high)]);
+  T pivot = list[low];
+  int i = low - 1, j = high + 1;
+  while (true) {
+    do {
+      ++i;
+    } while (descending ? list[i] > pivot : list[i] < pivot);
+    do {
+      --j;
+    } while (descending ? list[j] < pivot : list[j] > pivot);
+    if (i >= j) return j;
+    std::swap(list[i], list[j]);
+  }
+}
 
 
 
@@ -226,10 +244,56 @@ vector<T>& quick_partition(vector<T> &list, bool descending) {
  *                   in ascending order (the default)
  *
  * */
-template<typename T>
-void merge_sort(vector<T> &list, bool decending) {
-    // Your code here!
+template <typename T>
+void merge_sort(std::vector<T> &list, bool descending) {
+  std::uint64_t n = list.size();
+  if (n <= 1) return;
+  if (descending) {
+    if (std::is_sorted(list.begin(), list.end(), std::greater<T>())) return;
+  } else {
+    if (std::is_sorted(list.begin(), list.end())) return;
+  }
+  std::vector<T> left(list.begin(), list.begin() + n / 2);
+  std::vector<T> right(list.begin() + n / 2, list.end());
+  merge_sort(left, descending);
+  merge_sort(right, descending);
+  merge(left, right, list, descending);
 }
+
+template <typename T>
+void merge(std::vector<T> &left, std::vector<T> &right, std::vector<T> &list,
+           bool descending) {
+  list.clear();
+  std::uint64_t i{0}, j{0}, k{0};
+  std::uint64_t left_size{left.size()}, right_size{right.size()};
+  while (i < left_size && j < right_size) {
+    if (descending) {
+      if (left[i] > right[j]) {
+        list.push_back(left[i]);
+        i++;
+      } else {
+        list.push_back(right[j]);
+        j++;
+      }
+    } else {
+      if (left[i] < right[j]) {
+        list.push_back(left[i]);
+        i++;
+      } else {
+        list.push_back(right[j]);
+        j++;
+      }
+    }
+  }
+
+  for (; i < left_size; i++) {
+    list.push_back(left[i]);
+  }
+  for (; j < right_size; j++) {
+    list.push_back(right[j]);
+  }
+}
+
 
 
 /* Bucket Merge Sort
@@ -364,10 +428,66 @@ void bucket_merge_sort(std::vector<T> &list, bool descending) {
  *                      - (unsigned) int
  *                      - (unsigned) long int
  */
-// template <Integral T>
-// void binary_radix_sort(vector<T> &list, bool descending) {
 
-// }
+ template <Integral T>
+void binary_radix_sort(vector<T> &list, bool descending) {
+  // Since C++ uses 2's compliment, we'll handle both cases.
+  vector<T> negatives;
+  vector<T> nonNegatives;
+  for (T val : list)
+    // we can flip the sign so we don't have to deal with 2's compliment
+    if (val < 0)
+      negatives.push_back(-1 * val);
+    else
+      nonNegatives.push_back(val);
+  binary_radix_sort_helper(negatives, !descending);  // flip negatives!
+  binary_radix_sort_helper(nonNegatives, descending);
+  // flip the sign of negative numbers back
+  for (T &val : negatives) val = -1 * val;
+  // append negatives to the front of nonNegatives or vice versa if descending
+  list.clear();
+  if (descending) {
+    list.insert(list.end(), nonNegatives.begin(), nonNegatives.end());
+    list.insert(list.end(), negatives.begin(), negatives.end());
+  } else {
+    list.insert(list.end(), negatives.begin(), negatives.end());
+    list.insert(list.end(), nonNegatives.begin(), nonNegatives.end());
+  }
+}
+template <typename T>
+void binary_radix_sort_helper(vector<T> &list, bool descending) {
+  if (list.size() == 0) return;
+  T maxValue = list[0];
+  for (int i = 1; i < list.size(); i++)
+    if (list[i] > maxValue) maxValue = list[i];
+  // to avoid doing unnecessary work ( counting sort on a bunch of just 0s ), we
+  // want to find the most significant 1 bit we can shift right until we hit 0
+  // and track how many shifts
+  int maxBitsToSort = 0;
+  for (int i = maxValue; i > 0; i = i >> 1) maxBitsToSort++;
+
+  // we only need to go maxBitsToSort times
+  for (int i = 0; i < maxBitsToSort; i++) {
+    vector<T> zeroList;
+    vector<T> oneList;
+
+    for (T num : list) {
+      if ((num >> i) & 1)        // checks LEAST SIGNIFICANT BIT after shift!!
+        oneList.push_back(num);  // if the current bit is 1
+      else
+        zeroList.push_back(num);  // if the current bit is 0
+    }
+
+    list.clear();
+    if (descending) {
+      list.insert(list.end(), oneList.begin(), oneList.end());
+      list.insert(list.end(), zeroList.begin(), zeroList.end());
+    } else {
+      list.insert(list.end(), zeroList.begin(), zeroList.end());
+      list.insert(list.end(), oneList.begin(), oneList.end());
+    }
+  }
+}
 
 
 
@@ -389,7 +509,7 @@ void bucket_merge_sort(std::vector<T> &list, bool descending) {
  */
 
 template <typename T>
-void insertion_sort_helper_2(std::vector<T> &list, int start, int end, bool descending) {
+void hybrid_insertion_sort_helper(std::vector<T> &list, int start, int end, bool descending) {
     for (int i = start + 1; i <= end; i++) { 
         T key = list[i];
         int j = i;
@@ -409,7 +529,7 @@ void insertion_sort_helper_2(std::vector<T> &list, int start, int end, bool desc
 }
 
 template <typename T>
-int partition_helper(std::vector<T> &list, int low, int high, bool descending) {
+int hybrid_partition_helper(std::vector<T> &list, int low, int high, bool descending) {
     T pivot = list[high];
     int j = low;
 
@@ -431,7 +551,7 @@ void hybrid_quick_sort(std::vector<T> &list, int low, int high, bool descending)
             insertion_sort_helper_2(list, low, high, descending);
             break;
         } else {
-            int pivot = partition_helper(list, low, high, descending);
+            int pivot = hybrid_partition_helper(list, low, high, descending);
 
             // Sort the smaller partition
             if (pivot - low < high - pivot) {
@@ -485,11 +605,10 @@ void my_hybrid_sort(std::vector<T> &list, bool descending) {
  *
  *
  */
-// template<Integral T>
-// void radix_sort(vector<T> &list, unsigned int base, bool descending) {
-//     // Your code here!
-// }
-
+template<Integral T>
+void radix_sort(vector<T> &list, unsigned int base, bool descending) {
+    // Your code here!
+}
 
 
 
@@ -513,7 +632,7 @@ int main() {
      *   - uncomment all lines below that begin with "//".
      *
      */
-    vector<int> test_list {5, 4, 2, 3, 1};
+    //vector<int> test_list {5, 4, 2, 3, 1};
     //bubble_sort(test_list);
     //selection_sort(test_list);
     //insertion_sort(test_list);
@@ -523,10 +642,6 @@ int main() {
     //binary_radix_sort(test_list);
     //my_hybrid_sort(test_list);
     //radix_sort(test_list);
-
-    for(auto a : test_list){
-        cout << a << " ";
-    }
     return 0;
 }
 
