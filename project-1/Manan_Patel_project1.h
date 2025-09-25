@@ -75,17 +75,30 @@ void merge_sort(vector<T> &list, bool descending = false);
 template<typename T>
 void bucket_merge_sort(vector<T> &list, bool descending = false);
 
+template<typename T>
+void quicksort_helper(std::vector<T> &list, int low, int high, bool descending);
+
+template <typename T>
+int partition_helper(std::vector<T> &list, int low, int high, bool descending);
+
+template <typename T>
+void merge(std::vector<T> &left, std::vector<T> &right, std::vector<T> &list,
+           bool descending);
 
 /* Binary Radix Sort */
-// template<Integral T>
-// void binary_radix_sort(vector<T> &list, bool descending = false);
+template<Integral T>
+void binary_radix_sort(vector<T> &list, bool descending = false);
 
 
 /* Your Hybrid Sort */
 template<typename T>
 void my_hybrid_sort(vector<T> &list, bool descending = false);
 
+template<typename T>
+void binary_radix_sort_helper(vector<T> &list, bool descending);
 
+template<typename T>
+void radix_sort_helper(vector<T> &list, unsigned int base, bool descending)
 /* Base B Radix Sort */
 // template<Integral T> 
 // void radix_sort(vector<T> &list, unsigned int base = 10, bool descending = false);
