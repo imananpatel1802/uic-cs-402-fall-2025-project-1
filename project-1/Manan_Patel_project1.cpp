@@ -548,7 +548,7 @@ void hybrid_quick_sort(std::vector<T> &list, int low, int high, bool descending)
     while (low < high) {
         // Use insertion sort
         if (high - low + 1 <= 20) {
-            insertion_sort_helper_2(list, low, high, descending);
+            hybrid_insertion_sort_helper(list, low, high, descending);
             break;
         } else {
             int pivot = hybrid_partition_helper(list, low, high, descending);
