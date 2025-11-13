@@ -4,7 +4,7 @@
 #include <iostream>
 
 // be sure to change FIRSTNAME and LASTNAME with your own first and last name
-#include "Firstname_Lastname_project2.h"
+#include "Manan_Patel_project2.h"
 
 using namespace std;
 
