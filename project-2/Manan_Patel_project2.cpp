@@ -2,6 +2,10 @@
 #include <limits.h>
 #include <random>
 #include <iostream>
+#include <vector>
+#include <queue>
+#include <unordered_map>
+#include <unordered_set>
 
 // be sure to change FIRSTNAME and LASTNAME with your own first and last name
 #include "Manan_Patel_project2.h"
@@ -219,9 +223,29 @@ vector<unsigned int> birthday_attack_2(function<unsigned short(unsigned int)> ha
 
 
 vector<int> topological_sort(int n, vector<Edge> edges) {
-    // Your code here!
+    vector<vector<int>> adj(n);
+    vector<int> indegree(n, 0);
 
-    return {};
+    for (const auto& e : edges) {
+        adj[e.from].push_back(e.to);
+        ++indegree[e.to];
+    }
+
+    queue<int> q;
+    for (int i = 0; i < n; ++i) {
+        if (indegree[i] == 0) q.push(i);
+    }
+
+    vector<int> order;
+    while (!q.empty()) {
+        int u = q.front(); q.pop();
+        order.push_back(u);
+        for (int v : adj[u]) {
+            if (--indegree[v] == 0) q.push(v);
+        }
+    }
+
+    return order.size() == static_cast<size_t>(n) ? order : vector<int>{};
 }
 
 
@@ -253,8 +277,49 @@ vector<int> topological_sort(int n, vector<Edge> edges) {
  *
  */
 vector<int> dag_single_source(int n, vector<Edge> edges, int source) {
+    // Build adjacency list with weights
+    vector<vector<pair<int, int>>> adj(n);  // {to, weight}
+    for (const auto& e : edges) {
+        adj[e.from].emplace_back(e.to, e.weight);
+    }
 
-    return {};
+    // Topological sort
+    vector<int> indegree(n, 0);
+    for (const auto& e : edges) {
+        ++indegree[e.to];
+    }
+
+    queue<int> q;
+    for (int i = 0; i < n; ++i) {
+        if (indegree[i] == 0) q.push(i);
+    }
+
+    vector<int> order;
+    while (!q.empty()) {
+        int u = q.front(); q.pop();
+        order.push_back(u);
+        for (auto [v, _] : adj[u]) {
+            if (--indegree[v] == 0) q.push(v);
+        }
+    }
+
+    // If not all nodes reachable from sources → still OK (we'll handle with INT_MAX)
+
+    // Initialize distances
+    vector<int> dist(n, INT_MAX);
+    dist[source] = 0;
+
+    // Process nodes in topological order
+    for (int u : order) {
+        if (dist[u] == INT_MAX) continue;  // Skip unreachable
+        for (auto [v, w] : adj[u]) {
+            if (dist[u] + w < dist[v]) {
+                dist[v] = dist[u] + w;
+            }
+        }
+    }
+
+    return dist;
 }
 
 
