@@ -6,6 +6,9 @@
 #include <queue>
 #include <unordered_map>
 #include <unordered_set>
+#include <algorithm> 
+#include <iomanip>     
+#include <cmath>
 
 // be sure to change FIRSTNAME and LASTNAME with your own first and last name
 #include "Manan_Patel_project2.h"
@@ -176,8 +179,8 @@ vector<unsigned int> birthday_attack_2(function<unsigned short(unsigned int)> ha
     // Note you can implement your own test hash functions so long as their 
     // signatures match the `test_hash` function signature.
     
-    unsigned int tort = 0;
-    unsigned int hare = 0;
+    unsigned int tort = hash_function(0);
+    unsigned int hare = hash_function(hash_function(0));
 
     do {
         tort = hash_function(tort);
@@ -352,11 +355,47 @@ vector<int> dag_single_source(int n, vector<Edge> edges, int source) {
 
 
 vector<Node> dijkstras_algorithm(int n, vector<Edge> edges, int source) {
-    // Your code here!
-    // Note: see the LeetCode from in-class for the problem "Cheapest Flights
-    // K stops" to see how you can create a priority_queue with the Node struct.
-    
-    return {};
+    // Build adjacency list: {to, weight}
+    vector<vector<pair<int, int>>> adj(n);
+    for (const auto& e : edges) {
+        adj[e.from].emplace_back(e.to, e.weight);
+    }
+
+    // Priority queue: {cost, node_id}
+    using T = pair<int, int>;
+    priority_queue<T, vector<T>, greater<T>> pq;
+
+    // Distance and predecessor
+    vector<int> dist(n, INT_MAX);
+    vector<int> pred(n, -1);
+    dist[source] = 0;
+    pq.emplace(0, source);
+
+    while (!pq.empty()) {
+        auto [cost, u] = pq.top();
+        pq.pop();
+
+        if (cost > dist[u]) continue;  // Outdated entry
+
+        for (auto [v, w] : adj[u]) {
+            int new_cost = dist[u] + w;
+            if (new_cost < dist[v]) {
+                dist[v] = new_cost;
+                pred[v] = u;
+                pq.emplace(new_cost, v);
+            }
+        }
+    }
+
+    // Build output
+    vector<Node> result(n);
+    for (int i = 0; i < n; ++i) {
+        result[i].id = i;
+        result[i].path_cost = dist[i];
+        result[i].pred = pred[i];
+    }
+
+    return result;
 }
 
 
@@ -456,7 +495,13 @@ vector<Node> dijkstras_algorithm(int n, vector<Edge> edges, int source) {
 
 // You must implement this function.
 double heuristic_cost(GridNode start, GridNode dest) {
-    // Your code here!
+    int dx = std::abs(start.x - dest.x);
+    int dy = std::abs(start.y - dest.y);
+
+    int min_moves = std::min(dx, dy);
+    int extra_cardinal = dx + dy - 2 * min_moves;
+
+    return 1.5 * min_moves + 1.0 * extra_cardinal;
 }
 
 // To test your algorithm with the function "heruistic_cost" above,
@@ -474,6 +519,87 @@ vector<GridNode> a_star_algorithm(
     // Be sure to use "h" from the inputs in your implementation; do not
     // directly use "heruistic_cost" above!
 
+    // 1. Build adjacency list:  map (x,y) → list of {to_x, to_y, weight}
+    
+    using Neighbor = pair<pair<int,int>, double>;
+    unordered_map<long long, vector<Neighbor>> adj;
+
+    auto key = [m](int x, int y) { return (long long)y * m + x; };
+
+    for (const auto& e : edges) {
+        long long k1 = key(e.from_x, e.from_y);
+        // long long k2 = key(e.to_x,   e.to_y);   // <-- DELETE THIS LINE
+        double w = (std::abs(e.from_x - e.to_x) + std::abs(e.from_y - e.to_y) == 2) ? 1.5 : 1.0;
+        adj[k1].emplace_back(make_pair(e.to_x, e.to_y), w);
+    }
+
+    // 2. A* data structures
+    // priority queue:  { f = g + h,  g,  x, y }
+    using PQEntry = tuple<double, double, int, int>;
+    priority_queue<PQEntry, vector<PQEntry>, greater<PQEntry>> pq;
+
+    // g-score (exact cost from source)
+    unordered_map<long long, double> g_score;
+    // predecessor (to reconstruct the path)
+    unordered_map<long long, pair<int,int>> came_from;
+
+    // initialise source
+    long long src_key = key(source.x, source.y);
+    g_score[src_key] = 0.0;
+    double h_src = h(source, target);
+    pq.emplace(h_src, 0.0, source.x, source.y);   // f = g + h
+
+    // 3. Main A* loop
+    while (!pq.empty()) {
+        auto [f, g, x, y] = pq.top();  pq.pop();
+        long long cur_key = key(x, y);
+
+        if (g > g_score[cur_key]) continue;    // outdated entry
+
+        if (x == target.x && y == target.y) {
+            // ----- reconstruct path -----
+            vector<GridNode> path;
+            pair<int,int> cur = {x, y};
+            while (cur != make_pair(source.x, source.y)) {
+                GridNode node;
+                node.x = cur.first;
+                node.y = cur.second;
+                node.path_cost = g_score[key(cur.first, cur.second)];
+                path.push_back(node);
+                cur = came_from[key(cur.first, cur.second)];
+            }
+            // add source
+            GridNode src_node = source;
+            src_node.path_cost = 0.0;
+            path.push_back(src_node);
+            // reverse to source → target order
+            reverse(path.begin(), path.end());
+
+            // set total cost on the target node
+            path.back().path_cost = g;
+            return path;
+        }
+
+        // explore neighbours
+        long long k = key(x, y);
+        for (const auto& nb : adj[k]) {
+            auto [nx, ny] = nb.first;
+            double edge_w = nb.second;
+
+            long long nkey = key(nx, ny);
+            double tentative_g = g + edge_w;
+
+            auto it = g_score.find(nkey);
+            if (it == g_score.end() || tentative_g < it->second) {
+                came_from[nkey] = {x, y};
+                g_score[nkey] = tentative_g;
+                double f_new = tentative_g + h(GridNode{nx,ny,0,0,0}, target);
+                pq.emplace(f_new, tentative_g, nx, ny);
+            }
+        }
+    }
+
+    // 4. No path found
     return {};
 }
 
