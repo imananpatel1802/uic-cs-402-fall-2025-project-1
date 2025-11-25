@@ -498,8 +498,8 @@ double heuristic_cost(GridNode start, GridNode dest) {
     int dx = std::abs(start.x - dest.x);
     int dy = std::abs(start.y - dest.y);
 
-    int min_moves = std::min(dx, dy);
-    int extra_cardinal = dx + dy - 2 * min_moves;
+    int min_moves = std::min(dx, dy); // How many diag we can have
+    int extra_cardinal = dx + dy - 2 * min_moves; // Extra straight path
 
     return 1.5 * min_moves + 1.0 * extra_cardinal;
 }
